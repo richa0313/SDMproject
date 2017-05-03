@@ -89,7 +89,7 @@ for (i in 7:nrow(finaldata))
 
 
 #created dataset
-workdata <- data.frame(snp_pc1, snp_pc2, snp_pc3, snp_pc4, snp_pc5, brent_pc1, brent_pc2, brent_pc3, brent_pc4, brent_pc5, jetfuel_pc1)
+workdata <- data.frame(snp_pc1, snp_pc2, snp_pc3, snp_pc4, snp_pc5, brent_pc1, brent_pc2, brent_pc3, brent_pc4, brent_pc5, jetfuel_pc1, jetfuel_pc2, jetfuel_pc3, jetfuel_pc4, jetfuel_pc5, delta_pc1 )
 #adding date columns
 #workdata$DeltaAdj.Close <- finaldata$DeltaAdj.Close
 #workdata$Date <- finaldata$Date
@@ -104,7 +104,7 @@ trng <- workdata[part,]
 test <- workdata[-part,]
 
 #perform regression
-linear.reg <- lm(jetfuel_pc1 ~  ., data = trng)
+linear.reg <- lm(delta_pc1 ~  ., data = trng)
 summary(linear.reg);
 #root mean square error
 linear.rmse  <- sqrt(mean(linear.reg$residuals)^2);
