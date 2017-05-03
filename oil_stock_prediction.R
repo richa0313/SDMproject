@@ -79,20 +79,37 @@ for (i in 7:nrow(finaldata))
 }
 
 
+
+# compute price change for Delta adjusted close
+delta_pc1 = c(); delta_pc2= c(); delta_pc3 = c(); delta_pc4 = c(); delta_pc5 = c();
+for (i in 7:nrow(finaldata))
+{
+  delta_pc1[i] <- (finaldata$DeltaAdj.Close[i - 1] - finaldata$DeltaAdj.Close[i - 2])/(finaldata$DeltaAdj.Close[i - 2])
+}
+
+
 #created dataset
-workdata <- data.frame(snp_pc1, snp_pc2, snp_pc3, snp_pc4, snp_pc5, brent_pc1, brent_pc2, brent_pc3, brent_pc4, brent_pc5, jetfuel_pc1, jetfuel_pc2, jetfuel_pc3, jetfuel_pc4, jetfuel_pc5 )
+workdata <- data.frame(snp_pc1, snp_pc2, snp_pc3, snp_pc4, snp_pc5, brent_pc1, brent_pc2, brent_pc3, brent_pc4, brent_pc5, jetfuel_pc1)
 #adding date columns
-workdata$DeltaAdj.Close <- finaldata$DeltaAdj.Close
-workdata$Date <- finaldata$Date
+#workdata$DeltaAdj.Close <- finaldata$DeltaAdj.Close
+#workdata$Date <- finaldata$Date
 #removing empty rows
 workdata <- workdata[7:nrow(workdata),]
 
+#partition
+rnum <- (runif(1, .60, .70))
+rnum
+part <-sample(1:nrow(workdata), rnum * nrow(workdata))
+trng <- workdata[part,]
+test <- workdata[-part,]
+
 #perform regression
-linear.reg <- lm(DeltaAdj.Close ~ snp_pc1+snp_pc2+snp_pc3+snp_pc4+snp_pc5, data = trng)
+linear.reg <- lm(jetfuel_pc1 ~  ., data = trng)
 summary(linear.reg);
-
-
-
+#root mean square error
+linear.rmse  <- sqrt(mean(linear.reg$residuals)^2);
+#predicting the test data
+linear.predict <- predict(linear.reg,test)
 
 
 
