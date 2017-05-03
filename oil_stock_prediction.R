@@ -81,8 +81,11 @@ for (i in 7:nrow(finaldata))
 
 #created dataset
 workdata <- data.frame(snp_pc1, snp_pc2, snp_pc3, snp_pc4, snp_pc5, brent_pc1, brent_pc2, brent_pc3, brent_pc4, brent_pc5, jetfuel_pc1, jetfuel_pc2, jetfuel_pc3, jetfuel_pc4, jetfuel_pc5 )
-#removing empty rows 
+#adding date column
+workdata$Date <- finaldata$Date
+#removing empty rows
 workdata <- workdata[7:nrow(workdata),]
+
 
 
 
