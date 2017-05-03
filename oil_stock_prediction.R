@@ -18,4 +18,12 @@ colSums(is.na(brentprices))
 
 # check if there is a pattern in the missing data
 md.pattern(jetfuelprices)
+md.pattern(brentprices)
+
+# delete rows with na values
+jetfuelprices <- na.omit(jetfuelprices)
+brentprices <- na.omit(brentprices)
+
+
+
 
