@@ -87,6 +87,10 @@ workdata$Date <- finaldata$Date
 #removing empty rows
 workdata <- workdata[7:nrow(workdata),]
 
+#perform regression
+linear.reg <- lm(DeltaAdj.Close ~ snp_pc1+snp_pc2+snp_pc3+snp_pc4+snp_pc5, data = trng)
+summary(linear.reg);
+
 
 
 
