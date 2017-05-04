@@ -1,4 +1,4 @@
-##### NAIVE BAYES #####
+##### NAIVE BAYES ##### part 2 ## make sure workdata.withemptyrows is created before we run this ##
 
 workdata.nb <- workdata.withemptyrows
 tempsnppccal <- workdata.nb[7:nrow(workdata.nb),]
@@ -69,7 +69,7 @@ brent_cat1 = c(); brent_cat2= c(); brent_cat3 = c(); brent_cat4 = c(); brent_cat
 for (i in 7:nrow(workdata.nb))
 {
   
-  brent_cat1[i] = ifelse(brent_pc1[i] < -1 * brent.sd, 'awful', 
+  brent_cat1[i] = ifelse(brent_pc1[i] < -1 * brent.sd1, 'awful', 
                        (ifelse((brent_pc1[i] >= -1 * brent.sd1 && brent_pc1[i] < -0.3 * brent.sd1), 'Bad',
                                (ifelse((brent_pc1[i] >= -0.3 * brent.sd1 && brent_pc1[i] < 0.3 * brent.sd1), 'Unchanged',
                                        (ifelse((brent_pc1[i] >= 0.3 * brent.sd1 && brent_pc1[i] < brent.sd1), 'Good',
@@ -160,19 +160,36 @@ work.nb <- work.nbALL[7:nrow(work.nbALL),]
 work.nb[1,ncol(work.nb)] <- work.nb[2,ncol(work.nb)]
 work.nb$deltapriceDir <- as.factor(work.nb$deltapriceDir)
 
-#work.nb[is.na(work.nb[,6]), 6] <- mean(work.nb[,6], na.rm = TRUE)
-
+#removingg NA from brent oil columns
+work.nb[is.na(work.nb[,6]), 6] <- 'Unchanged'
+work.nb[is.na(work.nb[,7]), 7] <- 'Unchanged'
+work.nb[is.na(work.nb[,8]), 8] <- 'Unchanged'
+work.nb[is.na(work.nb[,9]), 9] <- 'Unchanged'
+work.nb[is.na(work.nb[,10]), 10] <- 'Unchanged'
 #partition
 part.nb <-sample(1:nrow(work.nb), rnum * nrow(work.nb))
 trng.nb <- work.nb[part,]
 test.nb <- work.nb[-part,]
 
 #Naive Bayes
-# Modeling using NaiveBayes
-model.NB <- NaiveBayes(deltapriceDir ~ . , data = trng.nb)
-test.nb <- test.nb[complete.cases(trng.nb),]
-predict.nb <- predict(model.NB, data = test.nb)
-table(predict.nb, test$delta_pc1)
-confusionMatrix(test.nb$deltapriceDir, predict.nb$class)
+# Modeling using NaiveBayes #required "caret" package
+nb <- train(deltapriceDir ~ . , data=trng.nb, method="nb")
+#predict
+predNB <- predict(nb, test.nb)
+
+#accuracy measures 
+acc<-mean(predNB==test.nb$deltapriceDir) #print acc to get the value
+confusionMatrix(predNB, test.nb$deltapriceDir)
+
+
+# Modeling using NaiveBayes #required "e1071" package
+#model.NB <- NaiveBayes(deltapriceDir ~ . , data = trng.nb)
+#test.nb <- test.nb[complete.cases(trng.nb),]
+#predict.nb <- predict(model.NB, data = test.nb)
+#table( test.nb$deltapriceDir, predict.n)
+#confusionMatrix(test.nb$deltapriceDir, predict.nb$class)
+
+
+
 
 
