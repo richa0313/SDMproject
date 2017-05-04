@@ -143,6 +143,12 @@ table(test$delta_01,pred_1)
 table(test$delta_01,pred_2)
 table(test$delta_01,pred_3)
 
+#measuring accuracy Accuracy : 0.6752, 0.6907, 0.6874
+confusionMatrix(test$delta_01, pred_1)
+confusionMatrix(test$delta_01, pred_2)
+confusionMatrix(test$delta_01, pred_3)
+
+
 
 
 
