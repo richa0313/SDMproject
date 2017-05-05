@@ -41,6 +41,8 @@ finaldata <- sqldf('SELECT *
 
 #removing redundant date columns 3, 5 and 7
 finaldata[3] <- NULL
+finaldata[4] <- NULL
+finaldata[5] <- NULL
 #write.csv(finaldata, "FinalData.csv")
 #plot(finaldata$sp500Adj.Close, finaldata$DeltaAdj.Close)
 
@@ -97,6 +99,8 @@ workdata <- data.frame(snp_pc1, snp_pc2, snp_pc3, snp_pc4, snp_pc5, brent_pc1, b
 workdata <- workdata[7:nrow(workdata),]
 
 #partition
+
+workdata$delta_01 <- ifelse(workdata$delta_pc1 >= 0.00033, 1, 0)
 rnum <- (runif(1, .60, .70))
 rnum
 part <-sample(1:nrow(workdata), rnum * nrow(workdata))
@@ -111,11 +115,8 @@ linear.rmse  <- sqrt(mean(linear.reg$residuals)^2);
 #predicting the test data
 linear.predict <- predict(linear.reg,test)
 
-
 ####### Logistic Regression ########
-
 avg <- mean(workdata$delta_pc1)
-workdata$delta_01 <- ifelse(workdata$delta_pc1 >= 0.00033, 1, 0)
 
 lr.delta <- glm(delta_01 ~ . -delta_pc1, family=binomial(link="logit"), data=trng)
 summary(lr.delta)
@@ -144,6 +145,7 @@ table(test$delta_01,pred_2)
 table(test$delta_01,pred_3)
 
 #measuring accuracy Accuracy : 0.6752, 0.6907, 0.6874
+library("e1071")
 confusionMatrix(test$delta_01, pred_1)
 confusionMatrix(test$delta_01, pred_2)
 confusionMatrix(test$delta_01, pred_3)
@@ -156,7 +158,7 @@ plot(model.rpt)
 text(model.rpt, use.n= T, digits=3, cex=0.6)
 prediction.rpt <- predict(model.rpt, newdata = test, type="vector")
 pred_rpt <- ifelse(prediction.rpt > 0.5,1,0)
-printcp(model.rpt)
+#printcp(model.rpt)
 table(pred_rpt, test$delta_01)
 
 #accuracy - does not seems to improve - we can try using more combinations of features
