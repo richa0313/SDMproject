@@ -1,4 +1,4 @@
-setwd("F:/Study/SDM")
+#setwd("F:/Study/SDM")
 
 #reading file and setting the junks values to NA
 jetfuel <- read.csv(file = 'jetfuelprices.csv', skip = 12, header = T, as.is = T, na.strings = "#N/A")
@@ -146,6 +146,7 @@ table(test$delta_01,pred_3)
 
 #measuring accuracy Accuracy : 0.6752, 0.6907, 0.6874
 library("e1071")
+library("caret")
 confusionMatrix(test$delta_01, pred_1)
 confusionMatrix(test$delta_01, pred_2)
 confusionMatrix(test$delta_01, pred_3)
