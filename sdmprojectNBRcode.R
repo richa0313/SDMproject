@@ -179,7 +179,7 @@ predNB <- predict(nb, test.nb)
 
 #accuracy measures 
 acc<-mean(predNB==test.nb$deltapriceDir) #print acc to get the value
-confusionMatrix(predNB, test.nb$deltapriceDir)
+cmnb<- confusionMatrix(predNB, test.nb$deltapriceDir)
 
 
 # Modeling using NaiveBayes #required "e1071" package
