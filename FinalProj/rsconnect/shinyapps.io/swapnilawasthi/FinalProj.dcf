@@ -3,8 +3,9 @@ title: FinalProj
 account: swapnilawasthi
 server: shinyapps.io
 appId: 178378
-bundleId: 817212
+bundleId: 823883
 url: https://swapnilawasthi.shinyapps.io/FinalProj/
-when: 1494048078.52869
+when: 1494481914.18405
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: app-1.R

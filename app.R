@@ -1,6 +1,7 @@
 library('shiny')
 library('shinydashboard')
 library('shinythemes')
+library('klaR')
 #source("oil_stock_prediction.R")
 #source("sdmprojectNBRcode.R")
 
@@ -17,14 +18,14 @@ body <- dashboardBody(theme = "bootstrap.css",
                       tabItems(
                         tabItem(tabName = "dashboard",
                                 fluidRow(
-                                  box(solidHeader = TRUE, selectInput("dataset", "Choose a dataset:", choices = c("Brent Oil", "Jet Fuel", "delta", "S$P500 Index", "Workdataset")),
+                                  box(width = 4, solidHeader = TRUE, selectInput("dataset", "Choose a dataset:", choices = c("Brent Oil", "Jet Fuel", "delta", "S$P500 Index", "Workdataset")),
                                       numericInput("obs", "Number of observations to view:", 20),
                                       verbatimTextOutput("summary")),
                                   box(title = "Table view", div(style = 'overflow-x: scroll', tableOutput("view")))
                                 )
                         ),
                         tabItem(tabName = "Models",
-                                box(title = "Models", selectInput("Models", "Choose a Model:", choices = c("NaiveBayes", "Linear Regression", "Logistic Regression", "R-Part", "GBM")))
+                                box(width = 4, title = "Models", selectInput("Models", "Choose a Model:", choices = c("NaiveBayes", "Linear Regression", "Logistic Regression", "R-Part", "GBM")))
                         )
                       )
 )
@@ -75,7 +76,9 @@ body <- dashboardBody(theme = "bootstrap.css",
 ui <- dashboardPage(header, sidebar, body)
 
 
-### R CODE
+### R CODE BEGINS
+oldw <- getOption("warn")
+options(warn = -1)
 
 jetfuel <- read.csv(file = 'jetfuelprices.csv', skip = 12, header = T, as.is = T, na.strings = "#N/A")
 delta <- read.csv(file = 'Deltastocks.csv', skip = 0, header = T, as.is = T, na.strings = "NA")
@@ -189,7 +192,7 @@ linear.reg <- lm(delta_pc1 ~  ., data = trng)
 #root mean square error
 linear.rmse  <- sqrt(mean(linear.reg$residuals)^2);
 #predicting the test data
-linear.predict <- predict(linear.reg,test)
+#linear.predict <- predict(linear.reg,test)
 
 ####### Logistic Regression ########
 avg <- mean(workdata$delta_pc1)
@@ -205,16 +208,16 @@ lr.delta.02 <- glm(delta_01 ~ snp_pc1 + brent_pc1 + brent_pc3 + jetfuel_pc1, fam
 #summary(lr.delta.02)
 
 #Let's predict
-pred1 <- predict(lr.delta , newdata=test, type="response")
-pred2 <- predict(lr.delta.01 , newdata=test, type="response")
-pred3 <- predict(lr.delta.02 , newdata=test, type="response")
+#pred1 <- predict(lr.delta , newdata=test, type="response")
+#pred2 <- predict(lr.delta.01 , newdata=test, type="response")
+#pred3 <- predict(lr.delta.02 , newdata=test, type="response")
 
-pred_v <- c(pred1,pred2,pred3)
+#pred_v <- c(pred1,pred2,pred3)
 
 #converting predictions > 50% to 1 and remaining to 0
-pred_1 <- ifelse(pred1 > 0.5,1,0)
-pred_2 <- ifelse(pred2 > 0.5,1,0)
-pred_3 <- ifelse(pred3 > 0.5,1,0)
+#pred_1 <- ifelse(pred1 > 0.5,1,0)
+#pred_2 <- ifelse(pred2 > 0.5,1,0)
+#pred_3 <- ifelse(pred3 > 0.5,1,0)
 
 #table(test$delta_01,pred_1)
 #table(test$delta_01,pred_2)
@@ -233,8 +236,8 @@ library('rpart')
 model.rpt <- rpart(delta_01 ~ snp_pc1 + snp_pc4 + snp_pc5 + brent_pc1 + brent_pc2 + brent_pc4 + jetfuel_pc5 + jetfuel_pc3 + jetfuel_pc1, data=trng, cp=0)
 #plot(model.rpt)
 #text(model.rpt, use.n= T, digits=3, cex=0.6)
-prediction.rpt <- predict(model.rpt, newdata = test, type="vector")
-pred_rpt <- ifelse(prediction.rpt > 0.5,1,0)
+#prediction.rpt <- predict(model.rpt, newdata = test, type="vector")
+#pred_rpt <- ifelse(prediction.rpt > 0.5,1,0)
 #printcp(model.rpt)
 #table(pred_rpt, test$delta_01)
 
@@ -245,13 +248,13 @@ pred_rpt <- ifelse(prediction.rpt > 0.5,1,0)
 #install.packages('gbm')
 library('gbm')
 model.gbm <- gbm(delta_01 ~ snp_pc1 + brent_pc1 + brent_pc2 + brent_pc3 + jetfuel_pc1 + jetfuel_pc3 + jetfuel_pc4, data=trng , n.trees=5000, interaction.depth =6, shrinkage=0.01)
-prediction.gbm <- predict(model.gbm, newdata = test, n.trees=5000, type="response",na.action = na.pass)
+#prediction.gbm <- predict(model.gbm, newdata = test, n.trees=5000, type="response",na.action = na.pass)
 #head(prediction.gbm[])
 #tail(prediction.gbm[])
 #summary(prediction.gbm)
 
-pred_gbm <- ifelse(prediction.gbm > 0.42,1,0)
-printcp(model.rpt)
+#pred_gbm <- ifelse(prediction.gbm > 0.42,1,0)
+#printcp(model.rpt)
 #table(pred_gbm, test$delta_01)
 # accuracy remains around 61-62%
 #confusionMatrix(pred_gbm, test$delta_01)
@@ -431,11 +434,12 @@ test.nb <- work.nb[-part,]
 # Modeling using NaiveBayes #required "caret" package
 nb <- train(deltapriceDir ~ . , data=trng.nb, method="nb")
 #predict
-predNB <- predict(nb, test.nb)
+#predNB <- predict(nb, test.nb)
 
 #accuracy measures 
-acc<-mean(predNB==test.nb$deltapriceDir) #print acc to get the value
+#acc<-mean(predNB==test.nb$deltapriceDir) #print acc to get the value
 #confusionMatrix(predNB, test.nb$deltapriceDir)
+options(warn = oldw)
 
 ### R CODE ENDS
 
@@ -460,11 +464,42 @@ server <- shinyServer(function(input, output){
   })
   
   output$predY <- renderPrint({
+    #this is our model and its print
     y <- modelsInput()
-    print(y)
+    if(input$selmodel == "Linear Regression"){
+      print(y)
+      linear.rmse  <- sqrt(mean(linear.reg$residuals)^2)
+      cat("Root mean square error is")
+      print(linear.rmse) 
+    }else if(input$selmodel == "NaiveBayes"){
+      predNB <- predict(modelsInput(), test.nb)
+      acc<-mean(predNB==test.nb$deltapriceDir) #print acc to get the value
+      confusionMatrix(predNB, test.nb$deltapriceDir)
+    }else if(input$selmodel == "Logistic Regression"){
+      pred1 <- predict(lr.delta , newdata=test, type="response")
+      predlr <- predict(modelsInput() , newdata=test, type="response")
+      pred3 <- predict(lr.delta.02 , newdata=test, type="response")
+      pred_1 <- ifelse(pred1> 0.5,1,0)
+      pred_2 <- ifelse(predlr > 0.5,1,0)
+      pred_3 <- ifelse(pred3 > 0.5,1,0)
+      confusionMatrix(test$delta_01, pred_1)
+      confusionMatrix(test$delta_01, pred_2)
+      confusionMatrix(test$delta_01, pred_3)
+      #pred_v <- c(pred1,predlr,pred3)
+      #print(pred_v)
+    }else if(input$selmodel == "R-Part"){
+      predrpart <- predict(modelsInput() , newdata=test, type="vector")
+      pred_rpt <- ifelse(predrpart > 0.5,1,0)
+      confusionMatrix(test$delta_01, pred_rpt)
+    }else if(input$selmodel == "GBM"){
+      predgbm <- predict(modelsInput(), newdata = test, n.trees=5000, type="response",na.action = na.pass)
+      pred_gbm <- ifelse(predgbm > 0.42,1,0)
+      confusionMatrix(pred_gbm, test$delta_01)
+    }
   }) 
   
   output$summaryModels <- renderPlot({
+    linear.predict <- predict(linear.reg,test)
     plot(linear.predict, test$delta_pc1) 
   })
   # Show the first "n" observations
