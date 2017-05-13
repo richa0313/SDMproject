@@ -1,6 +1,17 @@
 library('shiny')
-library('shinydashboard')
 library('shinythemes')
+library('shinydashboard')
+library('datasets')
+library('ggplot2')
+library('car')
+library('RColorBrewer')
+library('corrplot')
+library('MASS')
+library('caret')
+library('ggthemes')
+library('e1071')
+library('gbm')
+library('rpart')
 library('klaR')
 #source("oil_stock_prediction.R")
 #source("sdmprojectNBRcode.R")
@@ -10,47 +21,8 @@ header <- dashboardHeader(title = "Delta prediction")
 sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-    menuItem("Models", tabName = "Models", icon = icon("th"), badgeLabel = "new", badgeColor = "green")
-  )
-)
-
-body <- dashboardBody(theme = "bootstrap.css",
-                      tabItems(
-                        tabItem(tabName = "dashboard",
-                                fluidRow(
-                                  box(width = 4, solidHeader = TRUE, selectInput("dataset", "Choose a dataset:", choices = c("Brent Oil", "Jet Fuel", "delta", "S$P500 Index", "Workdataset")),
-                                      numericInput("obs", "Number of observations to view:", 20),
-                                      verbatimTextOutput("summary")),
-                                  box(title = "Table view", div(style = 'overflow-x: scroll', tableOutput("view")))
-                                )
-                        ),
-                        tabItem(tabName = "Models",
-                                box(width = 4, title = "Models", selectInput("Models", "Choose a Model:", choices = c("NaiveBayes", "Linear Regression", "Logistic Regression", "R-Part", "GBM")))
-                        )
-                      )
-)
-ui <- dashboardPage(header, sidebar, body)
-
-server <- shinyServer(function(input, output){  
-  # Return the requested dataset
-  datasetInput <- reactive({    
-    switch(input$dataset, "Brent Oil" = brentoil, "Jet Fuel" = jetfuel, "delta" = delta, "S$P500 Index" = sp500, "Workdataset" = workdata)
-  })
-  # Generate a summary of the dataset
-  output$summary <- renderPrint({
-    dataset <- datasetInput()
-    summary(dataset)
-  })  
-  # Show the first "n" observations
-  output$view <- renderTable({head(datasetInput(), n = input$obs)},include.rownames=TRUE, digits=6)
-})
-
-header <- dashboardHeader(title = "Delta prediction")
-
-sidebar <- dashboardSidebar(
-  sidebarMenu(
-    menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-    menuItem("Models", tabName = "Models", icon = icon("th"), badgeLabel = "new", badgeColor = "green")
+    menuItem("Models", tabName = "Models", icon = icon("th"), badgeLabel = "new", badgeColor = "green"),
+    menuItem("Graphs", tabName = "Graphs", icon = icon("area-chart"))
   )
 )
 
@@ -67,9 +39,17 @@ body <- dashboardBody(theme = "bootstrap.css",
                         tabItem(tabName = "Models",
                                 fluidRow(
                                   box(solidHeader = TRUE, selectInput("selmodel", "Choose a Model:", choices = c("NaiveBayes", "Linear Regression", "Logistic Regression", "R-Part", "GBM")),
-                                      plotOutput(outputId = "summaryModels")),
+                                      verbatimTextOutput(outputId = "summaryModels") 
+                                  ),
                                   box(title = "Plot View", solidHeader = TRUE,  verbatimTextOutput(outputId = "predY"))
                                 )   
+                        ),
+                        tabItem(tabName = "Graphs",
+                                fluidRow(
+                                  tabBox(id = "tabpan1", height = 700, width = 1100,
+                                         tabPanel("Scatter Plot", plotOutput("scplot", height = 700, width = 1000)), 
+                                         tabPanel("Correlation Summary", plotOutput("corsummary", height = 700, width = 700))
+                                  ) )
                         )
                       )
 )
@@ -450,6 +430,22 @@ server <- shinyServer(function(input, output){
   sp500 <- read.csv(file = 'Proj-SP500.csv', skip = 0, header = T, as.is = T, na.strings = "NA")
   brentoil <- read.csv(file = 'brentoilprices.csv', skip = 12, header = T, as.is = T, na.strings = c("NA", "#N/A" ))
   
+  output$scplot<- renderPlot({
+    
+    #Code for scatterplot matrix   
+    scatterplotMatrix(~ snp_pc1 + brent_pc1 + jetfuel_pc1
+                      | delta_pc1, data = workdata, main = "Scatterplot",
+                      legend.plot = FALSE, diagonal="histogram")
+  })
+  output$corsummary<- renderPlot({
+    x <-  workdata[1:15]
+    y <- workdata[1:15]
+    m <- cor(x, y, use="pairwise.complete.obs") #use to avoid NAs in the dataset
+    corrplot(m, method ="color", tl.col="black",tl.pos="lt", outline=TRUE, addgrid.col="black",
+             number.font=2, number.cex=1, addCoef.col="black") 
+  } #Output Summary
+  )
+  
   datasetInput <- reactive({    
     switch(input$dataset, "Brent Oil" = brentoil, "Jet Fuel" = jetfuel, "delta" = delta, "S$P500 Index" = sp500, "Workdataset" = workdata)
   })
@@ -497,9 +493,8 @@ server <- shinyServer(function(input, output){
       confusionMatrix(pred_gbm, test$delta_01)
     }
   }) 
-  
   output$summaryModels <- renderPlot({
-    linear.predict <- predict(linear.reg,test)
+    linear.predict <- predict(linear.reg,test) 
     plot(linear.predict, test$delta_pc1) 
   })
   # Show the first "n" observations
@@ -507,4 +502,3 @@ server <- shinyServer(function(input, output){
 })
 
 shinyApp(ui = ui, server = server)
-
