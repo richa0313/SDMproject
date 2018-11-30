@@ -1,0 +1,132 @@
+Skip to content
+ 
+Search or jump to…
+
+Pull requests
+Issues
+Marketplace
+Explore
+ @swapnilawasthi Sign out
+100
+6 0 datarobot/data-science-scripts Private
+ Code  Issues 1  Pull requests 4  Projects 0  Wiki  Insights
+data-science-scripts/gourab/downsampling.R
+3d52277  on Jun 26, 2017
+@gourabde1 gourabde1 Stratified and majority DS
+     
+102 lines (77 sloc)  2.98 KB
+require(data.table)
+
+dataPath = '/Users/gourab/Documents/local data/ctrtrain.csv' #File path
+data = fread(dataPath)
+
+# Target
+label = "click"
+
+# If downsampling is purely for reducing the size, the size that you need in GB
+diskSizeLimit = 0.05
+
+# Desired ratio for the downsampled dataset
+ratio = 1
+
+# STRATIFIED DOWNSAMPLING TO REDUCE SIZE WHILE KEEPING THE TARGET DISTRIBUTION SAME
+stratifiedds <- function(dataPath,label,diskSizeLimit){
+  data = fread(dataPath)
+  if(length(unique(data[[label]]))!=2)
+  {
+    print('This function only works for binary prolems')
+  }
+  else
+  {
+    #SIZE OF THE ORIGINAL DATASET
+    diskSize <- file.info(dataPath)$size/1e9
+    
+    #CONVERTING BINARY TARGET TO STRING
+    data[[label]] <- as.character(data[[label]])
+    classes = unique(data[[label]])
+    t = table(data[[label]])
+    
+    #REQUIRED SUBSAMPLE SIZE FOR EACH CLASSES TO REDUCE SIZE
+    Class1Required <- t[1]*(diskSizeLimit/diskSize)
+    Class2Required <- t[2]*(diskSizeLimit/diskSize)
+    
+    #STRATIFIED SUBSAMPLING WITHIN EACH CLASS
+    dataClass1 <- data[data[[label]]==classes[1],][sample(Class1Required),]
+    dataClass2 <- data[data[[label]]==classes[2],][sample(Class2Required),]
+    
+    #FINAL DOWNSAMPLED DATASET
+    dataGenerated <- rbind(dataClass1,dataClass2)
+    dataGenerated <- dataGenerated[sample(nrow(dataGenerated)),]
+    
+  }
+  return(dataGenerated)
+}
+
+
+# DOWNSAMPLING THE MAJORITY CLASS TO ACHIEVE DESIRED BALANCE
+majorityds_withnolimit <- function(dataPath,label,ratio){
+  data = fread(dataPath)
+  if(length(unique(data[[label]]))!=2)
+  {
+    print('This function only works for binary prolems')
+  }
+  else
+  {
+    #CONVERTING BINARY TARGET TO STRING
+    data[[label]] <- as.character(data[[label]])
+    
+    #DETERMINING WHICH CLASS IS MAJORITY/MINORITY
+    t = table(data[[label]])
+    minorityClass <- names(which.min(t))
+    majorityClass <- names(which.max(t))
+    numberMinority <- sum(data[[label]]==minorityClass)
+    numberMajority <- sum(data[[label]]==majorityClass)
+    
+    #CURRENT RATIO BETWEEN MAJORITY AND MINORITY CLASS FREQUENCIES
+    currentRatio <- max(t)/min(t)
+    
+    #DOWNSAMPLING THE MAJORITY CLASS
+    majorityRequired <- ratio*numberMinority
+    minorityRequired <- numberMinority
+    
+    #CREATING WEIGHT FOR RECALIBRATION
+    majorityWeight <- currentRatio/ratio
+    
+    
+    if(minorityRequired>numberMinority|majorityRequired>numberMajority)
+    {
+      print("Data can't be generated for this ratio")
+    }
+    else
+    {
+      # NO DOWNSAMPLING FROM THE MINORITY CLASS AND WEIGHT = 1
+      dataMinority <- data[data[[label]]==minorityClass,];dataMinority$weight = 1
+      
+      # DOWNSAMPLING FROM THE MAJORITY CLASS AND WEIGHT = INVERSE OF SAMPLING WEIGHT
+      dataMajority <- data[data[[label]]==majorityClass,][sample(majorityRequired),];dataMajority$weight = majorityWeight
+      
+      #FINAL DOWNSAMPLED DATASET
+      dataGenerated <- rbind(dataMinority,dataMajority)
+      dataGenerated <- dataGenerated[sample(nrow(dataGenerated)),]
+    }
+  }
+  return(dataGenerated)
+}
+
+
+
+
+  
+© 2018 GitHub, Inc.
+Terms
+Privacy
+Security
+Status
+Help
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About
+Press h to open a hovercard with more details.
